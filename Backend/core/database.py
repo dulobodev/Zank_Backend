@@ -1,18 +1,27 @@
 # Backend/core/database.py
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from contextlib import asynccontextmanager
 from Backend.core.settings import Settings
 
-db_url = Settings().DATABASE_URL
+database_url = Settings().DATABASE_URL
 
-if db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif "+psycopg2" in db_url:
-    db_url = db_url.replace("+psycopg2", "+asyncpg")
+# Converter qualquer formato PostgreSQL para asyncpg
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif database_url.startswith("postgres://"):  # Fly.io usa esse formato
+    database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif "psycopg2" in database_url:
+    database_url = database_url.replace("psycopg2", "asyncpg")
 
-engine = create_async_engine(db_url, echo=False)
+# Criar engine async
+engine = create_async_engine(
+    database_url,
+    echo=False,
+    pool_pre_ping=True,
+)
 
+# Sessão async
 async_session = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
