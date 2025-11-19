@@ -100,7 +100,7 @@ class GastosMessages:
             data_formatada = datetime.fromisoformat(g['created_at']).strftime('%d/%m/%Y')
 
             linha = (
-                f'{emoji_cat}  {'📅'} {data_formatada}\n'
+                f'{emoji_cat}  📅 {data_formatada}\n'
                 f'R$ {float(g["value"]):.2f} - {g["message"]}\n'
                 f'⚙️ `{g["id"]}`'
             )
