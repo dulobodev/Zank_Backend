@@ -1,12 +1,24 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+# Backend/core/database.py
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
 from Backend.core.settings import Settings
 
-engine = create_async_engine(Settings().DATABASE_URL)
+db_url = Settings().DATABASE_URL
 
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif "+psycopg2" in db_url:
+    db_url = db_url.replace("+psycopg2", "+asyncpg")
 
-async def get_session():  # pragma: no cover
-    async with AsyncSession(engine, expire_on_commit=False) as session:
+engine = create_async_engine(db_url, echo=False)
+
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+
+async def get_session():
+    async with async_session() as session:
         yield session
 
 @asynccontextmanager
